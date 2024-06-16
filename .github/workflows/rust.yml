@@ -36,4 +36,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: warp-${{ matrix.os }}
-          path: target/release/warp
+          path: target/release/warp*
