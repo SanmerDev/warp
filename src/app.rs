@@ -2,8 +2,9 @@ use const_format::concatcp;
 use reqwest::header::{HeaderMap, HeaderValue};
 use reqwest::{tls, Client, ClientBuilder, StatusCode};
 
-use crate::input::Input;
-use crate::output::Output;
+use crate::request::RegisterRequest;
+use crate::response::RegisterResponse;
+use crate::util::Json;
 
 const BASE_URL: &str = "https://api.cloudflareclient.com/v0a2483";
 const URL_REG: &str = concatcp!(BASE_URL, "/reg");
@@ -31,15 +32,15 @@ impl App {
         }
     }
 
-    pub async fn register(&self, input: &Input) -> Option<Output> {
-        let input_str = serde_json::to_string(input).unwrap();
-        tracing::debug!(target: "App::register", input = %input_str);
+    pub async fn register(&self, request: &RegisterRequest) -> Option<RegisterResponse> {
+        let request_str = request.to_string();
+        tracing::debug!(target: "App::register", request = %request_str);
 
         let output = self
             .client
             .post(URL_REG)
             .header("CF-Access-Jwt-Assertion", &self.token)
-            .json(input)
+            .json(request)
             .send()
             .await;
 

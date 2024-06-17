@@ -4,12 +4,12 @@ use serde::{Deserialize, Serialize};
 use x25519_dalek::{PublicKey, StaticSecret};
 
 #[derive(Deserialize, Serialize, Debug)]
-pub struct Key {
+pub struct WireguardKey {
     pub private_key: String,
     pub public_key: String,
 }
 
-impl Key {
+impl WireguardKey {
     pub fn new() -> Self {
         let private_key = StaticSecret::random();
         let public_key = PublicKey::from(&private_key);

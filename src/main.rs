@@ -1,28 +1,43 @@
-use crate::app::App;
-use crate::input::Input;
-use crate::key::Key;
-use crate::output::Output;
-use clap::Parser;
-use serde::{Deserialize, Serialize};
+#![allow(unused)]
+
 use std::path::PathBuf;
 use std::{env, fs};
 
-mod app;
-mod input;
-mod key;
-mod output;
+use clap::{Arg, Command, Parser};
+use serde::{Deserialize, Serialize};
 
-/// Unofficial CLI for Cloudflare Zero Trust
-#[derive(Parser, Debug)]
-#[command(version)]
+use crate::app::App;
+use crate::request::RegisterRequest;
+use crate::response::RegisterResponse;
+use crate::util::Json;
+use crate::wireguard::WireguardKey;
+
+mod app;
+mod request;
+mod response;
+mod util;
+mod wireguard;
+
+/// Cloudflare Warp Utility
+#[derive(Parser)]
+#[command()]
 struct Args {
-    /// Zero Trust JWT token
-    #[arg(short, long, value_name = "TOKEN")]
+    /// JWT token
+    #[arg(short, long, value_name = "TOKEN", global = true)]
     token: Option<String>,
 
-    /// Write output to json
-    #[arg(short, long, value_name = "PATH")]
-    output: Option<PathBuf>,
+    #[command(subcommand)]
+    command: Commands,
+}
+
+#[derive(clap::Subcommand)]
+enum Commands {
+    /// Register a new device on Cloudflare Zero Trust
+    Register {
+        /// Write output to json
+        #[arg(short, long, value_name = "PATH")]
+        output: Option<PathBuf>,
+    },
 }
 
 fn init_logger() {
@@ -32,30 +47,37 @@ fn init_logger() {
 }
 
 #[derive(Deserialize, Serialize, Debug)]
-struct Out {
-    key: Key,
-    output: Output,
+struct Output {
+    key: WireguardKey,
+    response: RegisterResponse,
+}
+
+async fn register(app: &App, output: Option<PathBuf>) {
+    let key = WireguardKey::new();
+    let request = RegisterRequest::new(&key);
+
+    if let Some(response) = app.register(&request).await {
+        let key_str = key.to_string();
+        tracing::info!(target: "main", key = %key_str);
+
+        if let Some(file) = output {
+            let output = Output { key, response };
+            let output_str = output.to_string_pretty();
+            fs::write(file, output_str).unwrap();
+        }
+    }
 }
 
 #[tokio::main]
 async fn main() {
     let args = Args::parse();
+    init_logger();
+
     let token = args.token.unwrap_or_else(|| env::var("TOKEN").unwrap());
     let token = token.trim();
-
-    init_logger();
-    let key = Key::new();
-    let input = Input::new(&key);
     let app = App::new(token);
 
-    if let Some(output) = app.register(&input).await {
-        let out = Out { key, output };
-        let out = serde_json::to_string(&out).unwrap();
-        tracing::info!(target: "main", out = %out);
-
-        if let Some(file) = args.output {
-            let out_str = serde_json::to_string_pretty(&out).unwrap();
-            fs::write(file, out_str).unwrap();
-        }
+    match args.command {
+        Commands::Register { output } => register(&app, output).await,
     }
 }

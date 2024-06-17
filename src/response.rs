@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Debug)]
-pub struct Output {
+pub struct RegisterResponse {
     pub account: Account,
     pub config: Config,
     pub created: String,
