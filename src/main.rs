@@ -1,9 +1,7 @@
-#![allow(unused)]
-
 use std::path::PathBuf;
 use std::{env, fs};
 
-use clap::{Arg, Command, Parser};
+use clap::Parser;
 use serde::{Deserialize, Serialize};
 
 use crate::app::App;
@@ -18,9 +16,8 @@ mod response;
 mod util;
 mod wireguard;
 
-/// Cloudflare Warp Utility
 #[derive(Parser)]
-#[command()]
+#[command(disable_colored_help = true, disable_help_subcommand = true)]
 struct Args {
     /// JWT token
     #[arg(short, long, value_name = "TOKEN", global = true)]
@@ -32,7 +29,7 @@ struct Args {
 
 #[derive(clap::Subcommand)]
 enum Commands {
-    /// Register a new device on Cloudflare Zero Trust
+    /// Register new device
     Register {
         /// Write output to json
         #[arg(short, long, value_name = "PATH")]
