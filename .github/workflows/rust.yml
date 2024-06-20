@@ -11,13 +11,22 @@ env:
   RUST_BACKTRACE: 1
 
 jobs:
-  test:
-    name: Build on ${{ matrix.os }}
+  build:
+    name: Build
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        build: [linux-x86_64, windows-x86_64, macos-x86_64, macos-aarch64]
+        include:
+          - build: linux-x86_64
+            os: ubuntu-latest
+          - build: windows-x86_64
+            os: windows-latest
+          - build: macos-x86_64
+            os: macos-13
+          - build: macos-aarch64
+            os: macos-latest
 
     steps:
       - name: Checkout
@@ -35,5 +44,5 @@ jobs:
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: warp-${{ matrix.os }}
+          name: warp-${{ matrix.build }}
           path: target/release/warp*
