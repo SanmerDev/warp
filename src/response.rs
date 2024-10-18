@@ -21,6 +21,7 @@ pub struct Account {
 pub struct Config {
     pub client_id: String,
     pub peers: Vec<Peer>,
+    pub interface: Interface,
 }
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -33,6 +34,17 @@ pub struct Peer {
 pub struct Endpoint {
     pub host: String,
     pub ports: Vec<u64>,
+    pub v4: String,
+    pub v6: String,
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+pub struct Interface {
+    pub addresses: Addrs,
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+pub struct Addrs {
     pub v4: String,
     pub v6: String,
 }
